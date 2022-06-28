@@ -99,6 +99,8 @@ def _parseLine(line):
 
   value = _parseValue(value)
 
+  ts = int(ts)
+
   if '' == elev:
     elev = None
 
@@ -185,9 +187,6 @@ Outputs a pandas dataframe.
     lsval.append(sval)
     lbinval.append(binval)
 
-    #all.append(row)
-
-  #df = pandas.concat(all, copy=False, ignore_index = True)
   df = pandas.DataFrame(data = {
           'class' : lclasses,
           'labels' : llabels,
