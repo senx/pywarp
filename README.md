@@ -6,6 +6,14 @@ The functions it provides can be used to fetch data from a Warp 10 instance into
 
 Finally a function allows the conversion of native Warp 10 *wrappers* into a Pandas dataframe.
 
+# Installation
+
+Simply run the following command:
+
+```
+python3 setup.py install
+```
+
 # Data Frame schema
 
 The data frames returned by `pywarp.fetch` and `pywarp.spark.wrappers2df` have the following schema:
