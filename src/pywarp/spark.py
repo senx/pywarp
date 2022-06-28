@@ -38,6 +38,9 @@ Read wrappers from a Warp 10 instance.
   ## Configuration used to fetch data from a Warp 10 instance
   ##
 
+  if endpoint.endswith('/api/v0/fetch'):
+    endpoint = endpoint[:-13]
+
   url = urlparse(endpoint)
 
   if not url.port:
@@ -87,6 +90,9 @@ Read wrappers from a Warp 10 instance.
 
   rdd = sc.newAPIHadoopRDD('io.warp10.hadoop.Warp10InputFormat', 'org.apache.hadoop.io.Text', 'org.apache.hadoop.io.BytesWritable', conf=conf)
   df = rdd.toDF()
+  df = df.select(col('_2').alias('wrapper'))
+
+  return df
 
 def hfileread(sc, files, conf=None, selector=None, start=None, end=None):
   """
