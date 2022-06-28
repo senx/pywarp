@@ -18,6 +18,8 @@
 import requests
 import base64
 import math
+import json
+import pickle
 
 import pandas
 
@@ -205,6 +207,21 @@ Outputs a pandas dataframe.
         , copy = False)
 
   return df
+
+def exec(endpoint, mc2, unpickle=False):
+  """
+Executes WarpScript on a Warp 10 instance and return the result.
+  """
+
+  resp = requests.post(endpoint, data=mc2)
+  obj = json.loads(resp.text)
+
+  if unpickle:
+    pickled = base64.b64decode(obj[0])
+    obj = pickle.loads(pickled)
+
+  return obj
+
 
 if __name__ == "__main__":
   # https://manytools.org/hacker-tools/ascii-banner/ - speed
