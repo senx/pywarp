@@ -4,7 +4,9 @@ The `PyWarp` module provides functions which ease the interaction with the [Warp
 
 The functions it provides can be used to fetch data from a Warp 10 instance into a [Pandas](https://pandas.pydata.org) [dataframe](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) or a [Spark](https://spark.apache.org) [dataframe](https://spark.apache.org/docs/latest/sql-programming-guide.html#datasets-and-dataframes). A function is also provided for loading data from [HFiles](https://blog.senx.io/introducing-hfiles-cloud-native-infinite-storage-for-time-series-data/) into a Spark dataframe.
 
-Finally a function allows the conversion of native Warp 10 *wrappers* into a Pandas dataframe.
+A function also allows the conversion of native Warp 10 *wrappers* into a Pandas dataframe.
+
+An `exec` function allows the execution of WarpScript on a Warp 10 instance and the retrieval of the result.
 
 # Installation
 
@@ -79,4 +81,20 @@ df = pywarp.spark.hfileread(sc, '/path/to/file.hfile', selector='SELECTOR{}', en
 
 df = pywarp.spark.wrapper2df(sc, df, 'wrapper')
 df.show(n=1000,truncate=False)
+```
+
+## Executing WarpScript
+
+```
+import pywarp
+
+x = pywarp.exec('https://sandbox.senx.io/api/v0/exec',
+"""
+REV REV REV "UTF-8" ->BYTES 42 42.0 F 6 ->LIST
+#->PICKLE ->B64
+""",
+False # Set to true if your code returns base64 encoded pickled content (decomment the line that uses ->PICKLE above)
+)
+
+print(x)
 ```
