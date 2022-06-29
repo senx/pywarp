@@ -2,3 +2,4 @@ pyspark>=3.2.0
 pandas>=1.4.2
 requests>=2.25.1
 urllib3>=1.26.6
+cbor2>=5.1.0
