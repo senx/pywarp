@@ -64,6 +64,50 @@ df = pywarp.spark.wrapper2df(sc, df, 'wrapper')
 df.show()
 ```
 
+Spark jobs making use of the HFStore extension must be launched using:
+
+```
+spark-submit --packages io.warp10:warp10-spark:3.0.2,io.senx:warp10-ext-hfstore:1.8.0 \
+  --repositories https://maven.senx.io/repository/senx-public \
+  --properties-file spark.conf \
+  --files warp10.conf
+```
+
+where `spark.conf` contains the following definitions:
+
+```
+##
+## Executor specific options
+##
+
+spark.executor.extraJavaOptions=-Dwarp10.config=warp10.conf -Ddisable.logging=true 
+
+##
+## Driver specific options
+##
+
+spark.driver.extraJavaOptions=-Dwarp10.config=warp10.conf -Ddisable.logging=true 
+```
+
+and the `warp10.conf` file contains *a minima*:
+
+```
+##
+## Use microseconds as the time unit
+##
+warp.timeunits=us
+
+##
+## Load the Spark extension
+##
+warpscript.extensions=io.warp10.spark.SparkWarpScriptExtension
+
+##
+## Load the Debug extension so STDOUT is available
+##
+warpscript.extension.debug=io.warp10.script.ext.debug.DebugWarpScriptExtension
+```
+
 ## Reading data from HFiles in Spark
 
 ```
