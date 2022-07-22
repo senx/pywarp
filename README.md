@@ -67,7 +67,7 @@ df.show()
 Spark jobs making use of the HFStore extension must be launched using:
 
 ```
-spark-submit --packages io.warp10:warp10-spark:3.0.2,io.senx:warp10-ext-hfstore:1.8.0 \
+spark-submit --packages io.warp10:warp10-spark:3.0.2,io.senx:warp10-ext-hfstore:2.0.0 \
   --repositories https://maven.senx.io/repository/senx-public \
   --properties-file spark.conf \
   --files warp10.conf
@@ -107,6 +107,29 @@ warpscript.extensions=io.warp10.spark.SparkWarpScriptExtension
 ##
 warpscript.extension.debug=io.warp10.script.ext.debug.DebugWarpScriptExtension
 ```
+
+Alternatively if you do not want to use `spark-submit`, you can add the following in your script after the `spark = ...` line:
+
+```
+conf = {}
+conf['spark.master'] = 'local'
+conf['spark.submit.deployMode'] = 'client'
+conf['spark.executor.instances'] = '1'
+conf['spark.executor.cores'] = '2'
+conf['spark.driver.memory'] = '1g'
+conf['spark.executor.memory'] = '1g'
+conf['spark.executor.extraJavaOptions'] = '-Dwarp10.config=warp10.conf -Ddisable.logging=true'
+conf['spark.driver.extraJavaOptions'] = '-Dwarp10.config=warp10.conf -Ddisable.logging=true'
+conf['spark.driver.bindAddress'] = '0.0.0.0'
+conf['spark.jars.packages'] = 'io.warp10:warp10-spark:3.0.2,io.senx:warp10-ext-hfstore:2.0.0'
+conf['spark.jars.repositories'] = 'https://maven.senx.io/senx-public'
+conf['spark.files'] = 'warp10.conf'
+
+for (k,v) in conf.items():
+  spark = spark.config(key=k,value=v)
+```
+
+and simply launch it using `python3`.
 
 ## Reading data from HFiles in Spark
 
