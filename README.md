@@ -10,7 +10,7 @@ An `exec` function allows the execution of WarpScript on a Warp 10 instance and 
 
 # Installation
 
-Simply run the following command:
+Ensure Spark and/or pyspark is installed (`pip3 install pyspark`) then simply run the following command:
 
 ```
 python3 setup.py install
