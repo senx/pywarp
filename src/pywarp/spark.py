@@ -128,7 +128,7 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
       mc2 = mc2 + " '" + selector + "' @METAMATCH NOT <% NULL %> <% $raw %> IFTE "
       mc2 = mc2.replace('\n',' ').replace('\'','\\\'').replace('\"','\\\"')
 
-      DF = 'DF' + str(int(time.time()))
+      DF = 'DF' + str(int(time.time() * 1000000.0))
       df.createOrReplaceTempView(DF)
       df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
       df = df.na.drop()
@@ -150,7 +150,7 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
 
       mc2 = mc2.replace('\n',' ').replace('\'','\\\'').replace('\"','\\\"')
 
-      DF = 'DF' + str(int(time.time()))
+      DF = 'DF' + str(int(time.time() * 1000000.0))
       df.createOrReplaceTempView(DF)
       df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
       df = df.na.drop()
@@ -238,7 +238,7 @@ Convert a data frame with wrappers into a data frame of observations.
   ## Extract wrapper content
   ##
 
-  DF = 'DF' + str(int(time.time()))
+  DF = 'DF' + str(int(time.time() * 1000000.0))
   df.createOrReplaceTempView(DF)
   df = df.sql_ctx.sql("SELECT pywarp_wrapper2df('" + mc2 + "', " + col + ") AS gts FROM " + DF)
 
