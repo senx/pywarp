@@ -106,6 +106,7 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
     else:
       conf['mapreduce.input.fileinputformat.inputdir'] = str(files)
     conf['hfileinputformat.cells'] = 'false'
+    conf['hfileinputformat.infos'] = 'false'
 
   rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
   df = rdd.toDF()
@@ -159,7 +160,7 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
 
   return df
 
-def wrapper2df(sc, df, col):
+def wrapper2df(sc, _df, col):
   """
 Convert a data frame with wrappers into a data frame of observations.
   """
@@ -232,26 +233,31 @@ Convert a data frame with wrappers into a data frame of observations.
   ## Register a function to process the wrappers
   ##
 
-  df.sql_ctx.registerJavaFunction("pywarp_wrapper2df", "io.warp10.spark.WarpScriptUDF2", schema)
+  _df.sql_ctx.registerJavaFunction("pywarp_wrapper2df", "io.warp10.spark.WarpScriptUDF2", schema)
 
   ##
   ## Extract wrapper content
   ##
 
   DF = 'DF' + str(int(time.time() * 1000000.0))
-  df.createOrReplaceTempView(DF)
-  df = df.sql_ctx.sql("SELECT pywarp_wrapper2df('" + mc2 + "', " + col + ") AS gts FROM " + DF)
+  _df.createOrReplaceTempView(DF)
+  _df2 = _df.sql_ctx.sql("SELECT pywarp_wrapper2df('" + mc2 + "', " + col + ") AS gts FROM " + DF)
 
   ##
   ## Explode the data points
   ##
 
-  df = df.select('gts.class','gts.labels','gts.attributes', explode(df.gts.datapoints).alias('datapoint'))
+  _df3 = _df2.select('gts.class','gts.labels','gts.attributes', explode(_df2.gts.datapoints).alias('datapoint'))
 
   ##
   ## Flatten the dataframe
   ##
 
-  df = df.selectExpr('`gts.class` as class', '`gts.labels` as labels', '`gts.attributes` as attributes', 'datapoint.ts as ts', 'datapoint.lat as lat', 'datapoint.lon as lon', 'datapoint.elev as elev', 'datapoint.l_value as l_value', 'datapoint.d_value as d_value', 'datapoint.b_value as b_value', 'datapoint.s_value as s_value','datapoint.bin_value as bin_value')
+  (major,minor,patch) = sc.version.split('.')
 
-  return df
+  if int(major) <= 3 and int(minor) < 2:
+    _df4 = _df3.selectExpr('`gts.class` as class', '`gts.labels` as labels', '`gts.attributes` as attributes', 'datapoint.ts as ts', 'datapoint.lat as lat', 'datapoint.lon as lon', 'datapoint.elev as elev', 'datapoint.l_value as l_value', 'datapoint.d_value as d_value', 'datapoint.b_value as b_value', 'datapoint.s_value as s_value','datapoint.bin_value as bin_value')
+  else:
+    _df4 = _df3.selectExpr('class', 'labels', 'attributes', 'datapoint.ts as ts', 'datapoint.lat as lat', 'datapoint.lon as lon', 'datapoint.elev as elev', 'datapoint.l_value as l_value', 'datapoint.d_value as d_value', 'datapoint.b_value as b_value', 'datapoint.s_value as s_value','datapoint.bin_value as bin_value')
+
+  return _df4
