@@ -32,6 +32,8 @@ import time
 def fetch(sc, endpoint, token, selector, end, timespan, conf = None):
   """
 Read wrappers from a Warp 10 instance.
+
+The time units used in end and timespan are those of the accessed platform.
   """
 
   ##
@@ -94,9 +96,11 @@ Read wrappers from a Warp 10 instance.
 
   return df
 
-def hfileread(sc, files, conf=None, selector=None, start=None, end=None):
+def hfileread(sc, files, conf=None, selector=None, start=None, end=None, skip=None, count=None, keepEmpty=False):
   """
 Reads data from HFiles and put the read wrappers inside of a data frame.
+
+The end and start parameters are specified in the configured time unit.
   """
 
   if not conf:
@@ -111,7 +115,9 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
   rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
   df = rdd.toDF()
 
-  if selector or start or end:
+  mc2 = ''
+
+  if selector or start or end or skip or count:
     df.sql_ctx.registerJavaFunction("pywarp_hfileread", "io.warp10.spark.WarpScriptUDF2", BinaryType())
     mc2 = "'raw' STORE $raw <% UNWRAPEMPTY WRAPFAST UNWRAPENCODER %> <% NEWENCODER %> <% %> TRY"
     macro = """
@@ -133,28 +139,66 @@ Reads data from HFiles and put the read wrappers inside of a data frame.
       df.createOrReplaceTempView(DF)
       df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
       df = df.na.drop()
-      mc2 = 'UNWRAPENCODER'
+
+    mc2 = 'UNWRAPENCODER'
 
     if start or end:
       mc2 = mc2 + " @@END@@ @@START@@ TIMECLIP "
       if start:
-        mc2 = mc2.replace("@@START@@", str(start) + " MSTU * TOLONG ISO8601")
+        mc2 = mc2.replace("@@START@@", str(start) + " TOLONG ISO8601")
       else:
         mc2 = mc2.replace("@@START@@", "MINLONG ISO8601")
 
       if end:
-        mc2 = mc2.replace("@@END@@", str(end) + " MSTU * TOLONG ISO8601")
+        mc2 = mc2.replace("@@END@@", str(end) + " TOLONG ISO8601")
       else:
         mc2 = mc2.replace("@@END@@", "MAXLONG ISO8601")
 
-      mc2 = mc2 + " DUP SIZE 0 == <% DROP NULL %> <% WRAPRAW %> IFTE"
+      if not keepEmpty:
+        mc2 = mc2 + " DUP SIZE 0 == <% DROP NULL %> IFT"
+
+    if skip and skip < 0:
+      print('skip cannot be negative')
+      exit(1)
+    elif not skip:
+      skip = 0
+
+    if count or skip:
+      if not count:
+        count = 2**33
+
+      mc2 = mc2 + """
+DUP ISNULL NOT <%
+  @@SKIP@@ 'skip' STORE
+  @@COUNT@@ 'count' STORE
+DUP SIZE TOSTRING 'BEFORE ' SWAP + STDOUT
+  DUP CLONEEMPTY SWAP
+  <%
+    $skip 0 ==
+    <%
+      $count 0 > <% LIST-> DROP ADDVALUE $count 1 - 'count' STORE %> <% DROP BREAK %> IFTE
+    %>
+    <% DROP $skip 1 - 'skip' STORE %>
+    IFTE
+  %> FOREACH
+DUP SIZE TOSTRING 'AFTER ' SWAP + STDOUT
+%> IFT
+      """
+      if count < 0:
+        mc2 = mc2.replace("@@SKIP@@", "DUP SIZE " + str(skip - count) + " -")
+        mc2 = mc2.replace("@@COUNT@@", str(-count))
+      else:
+        mc2 = mc2.replace("@@SKIP@@", str(skip))
+        mc2 = mc2.replace("@@COUNT@@", str(count))
 
       mc2 = mc2.replace('\n',' ').replace('\'','\\\'').replace('\"','\\\"')
 
-      DF = 'DF' + str(int(time.time() * 1000000.0))
-      df.createOrReplaceTempView(DF)
-      df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
-      df = df.na.drop()
+    mc2 = mc2 + ' DUP ISNULL NOT <% WRAPRAW %> IFT'
+
+    DF = 'DF' + str(int(time.time() * 1000000.0))
+    df.createOrReplaceTempView(DF)
+    df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
+    df = df.na.drop()
 
   df = df.select(col('_2').alias('wrapper'))
 
