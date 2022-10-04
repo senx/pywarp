@@ -163,8 +163,8 @@ The end and start parameters are specified in the configured time unit.
     elif not skip:
       skip = 0
 
-    if count or skip:
-      if not count:
+    if None != count or None != skip:
+      if None == count:
         count = 2**33
 
       mc2 = mc2 + """
