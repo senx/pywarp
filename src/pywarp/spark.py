@@ -171,7 +171,6 @@ The end and start parameters are specified in the configured time unit.
 DUP ISNULL NOT <%
   @@SKIP@@ 'skip' STORE
   @@COUNT@@ 'count' STORE
-DUP SIZE TOSTRING 'BEFORE ' SWAP + STDOUT
   DUP CLONEEMPTY SWAP
   <%
     $skip 0 ==
@@ -181,7 +180,6 @@ DUP SIZE TOSTRING 'BEFORE ' SWAP + STDOUT
     <% DROP $skip 1 - 'skip' STORE %>
     IFTE
   %> FOREACH
-DUP SIZE TOSTRING 'AFTER ' SWAP + STDOUT
 %> IFT
       """
       if count < 0:
