@@ -54,7 +54,9 @@ import pywarp.spark
 from pyspark.sql import SparkSession
 from pyspark.sql import SQLContext
 
-spark = SparkSession.builder.appName("PyWarp Test").getOrCreate()
+builder = SparkSession.builder.appName("PyWarp Test")
+
+spark = builder.getOrCreate()
 sc = spark.sparkContext
 
 sqlContext = SQLContext(sc)
@@ -108,7 +110,7 @@ warpscript.extensions=io.warp10.spark.SparkWarpScriptExtension
 warpscript.extension.debug=io.warp10.script.ext.debug.DebugWarpScriptExtension
 ```
 
-Alternatively if you do not want to use `spark-submit`, you can add the following in your script after the `spark = ...` line:
+Alternatively if you do not want to use `spark-submit`, you can add the following in your script between the line `builder = ....` and `spark = builder.getOrCreate()`
 
 ```
 conf = {}
@@ -126,7 +128,7 @@ conf['spark.jars.repositories'] = 'https://maven.senx.io/senx-public'
 conf['spark.files'] = 'warp10.conf'
 
 for (k,v) in conf.items():
-  spark = spark.config(key=k,value=v)
+  builder = builder.config(key=k,value=v)
 ```
 
 and simply launch it using `python3`.
@@ -150,7 +152,7 @@ df = pywarp.spark.wrapper2df(sc, df, 'wrapper')
 df.show(n=1000,truncate=False)
 ```
 
-## Executing WarpScript
+## Executing WarpScript on a Warp 10 instance
 
 ```
 import pywarp
@@ -164,4 +166,23 @@ False # Set to true if your code returns base64 encoded pickled content (decomme
 )
 
 print(x)
+```
+## Executing WarpScript in Spark
+
+```
+import pywarp
+
+spark = SparkSession.builder.appName("PyWarp Test").getOrCreate()
+sc = spark.sparkContext
+
+df = ....
+
+# Register a function 'foo' which returns a STRING and takes 2 parameters
+pywarp.spark.register(df.sql_ctx, 'foo', 2, '')
+
+# Create a temp view
+df.createOrReplaceTempView('DF')
+# Call WarpScript which converts column _1 to a STRING and returns it
+df = df.sql_ctx.sql("SELECT foo(' TOSTRING', _1) AS str FROM DF");
+df.show()
 ```
