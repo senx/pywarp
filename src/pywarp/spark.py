@@ -326,7 +326,10 @@ Returns a schema to which obj will conform, using primitive types supported by W
   elif int == type(obj):
     objschema = LongType()
   elif str == type(obj):
-    objschema = StringType()
+    if '' == str:
+      objschema = StringType()
+    else:
+      objschema = DataType.fromDDL(obj)
   elif bytes == type(obj):
     objschema = BinaryType()
   elif float == type(obj):
@@ -344,7 +347,7 @@ Registers a function with the Spark SQL context so it can be used in a SELECT st
 
 name is the name of the function as it will be used in the SELECT statement.
 args is the number of parameters to supply the function in the SELECT statement, the first one being the WarpScript code to execute. The number of parameters must be between 1 and 22.
-output_schema is either a Spark schema or an example object returned by the function call.
+output_schema is either a Spark schema or an example object returned by the function call. If output_schema is a non empty string, it is assumed to be a Spark schema definition that will be parsed.
   """
   if argc < 1 or argc > 22:
     raise RuntimeError('Functions can only have from 1 to 22 arguments.')
