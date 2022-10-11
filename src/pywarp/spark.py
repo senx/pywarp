@@ -21,6 +21,7 @@ import math
 
 import pandas
 
+from collections import OrderedDict
 from urllib.parse import unquote
 from urllib.parse import urlparse
 from pyspark.sql.types import *
@@ -303,3 +304,49 @@ Convert a data frame with wrappers into a data frame of observations.
     df = df.selectExpr('class', 'labels', 'attributes', 'datapoint.ts as ts', 'datapoint.lat as lat', 'datapoint.lon as lon', 'datapoint.elev as elev', 'datapoint.l_value as l_value', 'datapoint.d_value as d_value', 'datapoint.b_value as b_value', 'datapoint.s_value as s_value','datapoint.bin_value as bin_value')
 
   return df
+
+
+def schema(obj):
+  """
+Returns a schema to which obj will conform, using primitive types supported by WarpScript (LONG, DOUBLE, STRING, BINARY, BOOLEAN)
+  """
+
+  if StructType == type(obj) or ArrayType == type(obj) or MapType == type(obj) or LongType == type(obj) or DoubleType == type(obj) or StringType == type(obj) or BinaryType == type(obj) or BooleanType == type(obj):
+    return obj
+  elif OrderedDict == type(obj): # MUST appear before dict
+    fields = []
+    for key, value in obj.items():
+      fields.append(StructField(key, schema(value), True))
+    objschema = StructType(fields, True)
+  elif list == type(obj):
+    objschema = ArrayType(schema(obj[0]))
+  elif dict == type(obj):
+    (k,v) = obj.popitem()
+    objschema = MapType(schema(k), schema(v))
+  elif int == type(obj):
+    objschema = LongType()
+  elif str == type(obj):
+    objschema = StringType()
+  elif bytes == type(obj):
+    objschema = BinaryType()
+  elif float == type(obj):
+    objschema = DoubleType()
+  elif bool == type(obj):
+    objschema = BooleanType()
+  else:
+    raise RuntimeError('Unsupported type ' + repr(type(obj)))
+
+  return objschema
+
+def register(sqlc, name, argc, output_schema):
+  """
+Registers a function with the Spark SQL context so it can be used in a SELECT statement.
+
+name is the name of the function as it will be used in the SELECT statement.
+args is the number of parameters to supply the function in the SELECT statement, the first one being the WarpScript code to execute. The number of parameters must be between 1 and 22.
+output_schema is either a Spark schema or an example object returned by the function call.
+  """
+  if argc < 1 or argc > 22:
+    raise RuntimeError('Functions can only have from 1 to 22 arguments.')
+
+  sqlc.registerJavaFunction(name, 'io.warp10.spark.WarpScriptUDF' + str(argc), schema(output_schema))
