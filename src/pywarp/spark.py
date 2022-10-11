@@ -20,6 +20,7 @@ import base64
 import math
 
 import pandas
+import pyspark
 
 from collections import OrderedDict
 from urllib.parse import unquote
@@ -329,7 +330,7 @@ Returns a schema to which obj will conform, using primitive types supported by W
     if '' == str:
       objschema = StringType()
     else:
-      objschema = DataType.fromDDL(obj)
+      objschema = pyspark.sql.types._parse_datatype_string(obj)
   elif bytes == type(obj):
     objschema = BinaryType()
   elif float == type(obj):
