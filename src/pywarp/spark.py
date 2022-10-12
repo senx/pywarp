@@ -25,6 +25,7 @@ import pyspark
 from collections import OrderedDict
 from urllib.parse import unquote
 from urllib.parse import urlparse
+from pyspark.sql import SQLContext
 from pyspark.sql.types import *
 from pyspark.sql.functions import explode
 from pyspark.sql.functions import col
@@ -98,7 +99,7 @@ The time units used in end and timespan are those of the accessed platform.
 
   return df
 
-def hfileread(sc, files, conf=None, selector=None, start=None, end=None, skip=None, count=None, keepEmpty=False):
+def hfileread(sc, files, conf=None, selector=None, start=None, end=None, skip=None, count=None, keepEmpty=False, keys=None):
   """
 Reads data from HFiles and put the read wrappers inside of a data frame.
 
@@ -113,6 +114,16 @@ The end and start parameters are specified in the configured time unit.
       conf['mapreduce.input.fileinputformat.inputdir'] = str(files)
     conf['hfileinputformat.cells'] = 'false'
     conf['hfileinputformat.infos'] = 'false'
+    if str == type(keys):
+      conf['hfileinputformat.keys'] = keys
+
+  if SQLContext == type(sc):
+    # Register a dummy function so Warp 10 config gets initialized
+    sc.registerJavaFunction(' ', 'io.warp10.spark.WarpScriptUDF1', NullType())
+    sc = sc._sc
+  else:
+    sqlc = SQLContext(sc)
+    sqlc.registerJavaFunction(' ', 'io.warp10.spark.WarpScriptUDF1', NullType())
 
   rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
   df = rdd.toDF()
@@ -314,6 +325,8 @@ Returns a schema to which obj will conform, using primitive types supported by W
 
   if StructType == type(obj) or ArrayType == type(obj) or MapType == type(obj) or LongType == type(obj) or DoubleType == type(obj) or StringType == type(obj) or BinaryType == type(obj) or BooleanType == type(obj):
     return obj
+  elif None == obj:
+    return NullType()
   elif OrderedDict == type(obj): # MUST appear before dict
     fields = []
     for key, value in obj.items():
