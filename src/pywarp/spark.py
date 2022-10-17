@@ -125,93 +125,144 @@ The end and start parameters are specified in the configured time unit.
     sqlc = SQLContext(sc)
     sqlc.registerJavaFunction(' ', 'io.warp10.spark.WarpScriptUDF1', NullType())
 
-  rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
-  df = rdd.toDF()
+  mc2 = """
+  // Variable to keep track of the first record so we can emit a dummy record
+  // to speed up schema inference, Spark issueing a take(1) on the RDD
+  T 'first' CSTORE
+  '@@SELECTOR@@' 'selector' STORE
+  @@TIMECLIP@@ 'timeclip' STORE
+  NOT
+  <%  
+    // Discard the key
+    SWAP DROP
 
-  mc2 = ''
+
+    // Extract the metadata, creating an empty encoder if extraction failed
+    'raw' STORE $raw <% UNWRAPEMPTY WRAPFAST UNWRAPENCODER %> <% ERROR 1 SNAPSHOTN STDOUT NEWENCODER %> <% %> TRY
+
+    // Apply selector if specified
+    $selector '' !=
+    <%
+      $selector 
+      <%
+        SWAP CLONEEMPTY 0 NaN NaN NaN T ADDVALUE ->GTS
+        'BOOLEAN' GET 1 ->LIST SWAP filter.byselector [] SWAP 3 ->LIST FILTER
+        SIZE 0 !=
+      %>
+      EVAL NOT <% NULL %> <% $raw %> IFTE
+    %> 
+    <%
+      DROP $raw
+    %>
+    IFTE
+    // We can discard raw now
+    'raw' FORGET
+    DUP ISNULL NOT $timeclip AND <%
+      UNWRAPENCODER
+      @@END@@ @@START@@ TIMECLIP
+    %> IFT
+
+    // Continue processing only if METAMATCH matched (i.e. top of the stack is not NULL)
+    DUP ISNULL NOT
+    <%
+      DUP TYPEOF 'ENCODER' != <% UNWRAPENCODER %> IFT
+      @@SKIP@@ 'skip' STORE
+      @@COUNT@@ 'count' STORE
+      $skip 0 != $count MAXLONG != OR
+      <%
+        DUP CLONEEMPTY SWAP
+        <%
+          $skip 0 ==
+          <%
+            $count 0 > <% LIST-> DROP ADDVALUE $count 1 - 'count' STORE %> <% DROP BREAK %> IFTE
+          %>
+          <% DROP $skip 1 - 'skip' STORE %>
+          IFTE
+        %> FOREACH
+      %> IFT
+    %> IFT
+    DUP ISNULL NOT
+    <%
+      DUP SIZE 0 != @@KEEPEMPTY@@ OR
+      <%
+        WRAPRAW
+      %>
+      <%
+        DROP
+      %> IFTE
+    %>
+    <%
+      DROP
+    %> IFTE
+    'raw' FORGET
+    // Emiit a dummy record fast so Spark can determine the schema fast
+    DEPTH 0 != <% '' SWAP 2 ->LIST %> <% $first <% [ 'x' NEWENCODER WRAPRAW ] %> IFT %> IFTE
+    F 'first' STORE
+  %>
+  <%
+    // Reset 'first'
+    T 'first' STORE
+  %>  IFTE
+  """
+
+  if selector:
+    mc2 = mc2.replace('@@SELECTOR@@', selector)
+  else:
+    mc2 = mc2.replace('@@SELECTOR@@', '')
+    
+  if start:
+    mc2 = mc2.replace("@@START@@", str(start) + " TOLONG ISO8601")
+  else:
+    mc2 = mc2.replace("@@START@@", "MINLONG ISO8601")
+
+  if end:
+    mc2 = mc2.replace("@@END@@", str(end) + " TOLONG ISO8601")
+  else:
+    mc2 = mc2.replace("@@END@@", "MAXLONG ISO8601")
+
+  if end or start:
+    mc2 = mc2.replace('@@TIMECLIP@@', 'T')
+  else:
+    mc2 = mc2.replace('@@TIMECLIP@@', 'F')
+
+  if keepEmpty:
+    mc2 = mc2.replace('@@KEEPEMPTY@@', 'T')
+  else:
+    mc2 = mc2.replace('@@KEEPEMPTY@@', 'F')
+
+  if skip and skip < 0:
+    print('skip cannot be negative')
+    exit(1)
+  elif not skip:
+    skip = 0
+
+  if None != count or None != skip:
+    if None == count:
+      count = 'MAXLONG'
+
+  if count < 0:
+    mc2 = mc2.replace("@@SKIP@@", "DUP SIZE " + str(skip - count) + " -")
+    mc2 = mc2.replace("@@COUNT@@", str(-count))
+  else:
+    mc2 = mc2.replace("@@SKIP@@", str(skip))
+    mc2 = mc2.replace("@@COUNT@@", str(count))
+
 
   if selector or start or end or skip or count:
-    df.sql_ctx.registerJavaFunction("pywarp_hfileread", "io.warp10.spark.WarpScriptUDF2", BinaryType())
-    mc2 = "'raw' STORE $raw <% UNWRAPEMPTY WRAPFAST UNWRAPENCODER %> <% NEWENCODER %> <% %> TRY"
-    macro = """
-<%
-  'METAMATCH' SECTION
-  SWAP CLONEEMPTY 0 NaN NaN NaN T ADDVALUE ->GTS
-  'BOOLEAN' GET 1 ->LIST SWAP filter.byselector [] SWAP 3 ->LIST FILTER
-  SIZE 0 !=
-  'TOP' SECTION
-%> 'METAMATCH' STORE
-    """
-    mc2 = mc2 + macro
+    conf['warpscript.inputformat.class'] = 'io.senx.hadoop.HFileInputFormat'
+    conf['warpscript.inputformat.script'] = mc2
 
-    if selector:
-      mc2 = mc2 + " '" + selector + "' @METAMATCH NOT <% NULL %> <% $raw %> IFTE "
-      mc2 = mc2.replace('\n',' ').replace('\'','\\\'').replace('\"','\\\"')
+    rdd = sc.newAPIHadoopRDD(inputFormatClass='io.warp10.spark.SparkWarpScriptInputFormat',
+            keyClass='org.apache.hadoop.io.Text',
+            valueClass='org.apache.hadoop.io.BytesWritable',
+            conf=conf)
 
-      DF = 'DF' + str(int(time.time() * 1000000.0))
-      df.createOrReplaceTempView(DF)
-      df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
-      df = df.na.drop()
+    df = rdd.toDF()
+  else:
+    rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
+    df = rdd.toDF()
 
-    mc2 = 'UNWRAPENCODER'
-
-    if start or end:
-      mc2 = mc2 + " @@END@@ @@START@@ TIMECLIP "
-      if start:
-        mc2 = mc2.replace("@@START@@", str(start) + " TOLONG ISO8601")
-      else:
-        mc2 = mc2.replace("@@START@@", "MINLONG ISO8601")
-
-      if end:
-        mc2 = mc2.replace("@@END@@", str(end) + " TOLONG ISO8601")
-      else:
-        mc2 = mc2.replace("@@END@@", "MAXLONG ISO8601")
-
-      if not keepEmpty:
-        mc2 = mc2 + " DUP SIZE 0 == <% DROP NULL %> IFT"
-
-    if skip and skip < 0:
-      print('skip cannot be negative')
-      exit(1)
-    elif not skip:
-      skip = 0
-
-    if None != count or None != skip:
-      if None == count:
-        count = 2**33
-
-      mc2 = mc2 + """
-DUP ISNULL NOT <%
-  @@SKIP@@ 'skip' STORE
-  @@COUNT@@ 'count' STORE
-  DUP CLONEEMPTY SWAP
-  <%
-    $skip 0 ==
-    <%
-      $count 0 > <% LIST-> DROP ADDVALUE $count 1 - 'count' STORE %> <% DROP BREAK %> IFTE
-    %>
-    <% DROP $skip 1 - 'skip' STORE %>
-    IFTE
-  %> FOREACH
-%> IFT
-      """
-      if count < 0:
-        mc2 = mc2.replace("@@SKIP@@", "DUP SIZE " + str(skip - count) + " -")
-        mc2 = mc2.replace("@@COUNT@@", str(-count))
-      else:
-        mc2 = mc2.replace("@@SKIP@@", str(skip))
-        mc2 = mc2.replace("@@COUNT@@", str(count))
-
-      mc2 = mc2.replace('\n',' ').replace('\'','\\\'').replace('\"','\\\"')
-
-    mc2 = mc2 + ' DUP ISNULL NOT <% WRAPRAW %> IFT'
-
-    DF = 'DF' + str(int(time.time() * 1000000.0))
-    df.createOrReplaceTempView(DF)
-    df = df.sql_ctx.sql("SELECT pywarp_hfileread('" + mc2 + "', _2) AS _2 FROM " + DF)
-    df = df.na.drop()
-
-  df = df.select(col('_2').alias('wrapper'))
+  df = df.filter("_1 != 'x'").select(col('_2').alias('wrapper'))
 
   return df
 
@@ -230,7 +281,6 @@ Convert a data frame with wrappers into a data frame of observations.
   $encoder NAME 'class' STORE
   $encoder LABELS 'labels' STORE
   $encoder ATTRIBUTES 'attributes' STORE
-
 
   /* 
    * Build the list of data points
