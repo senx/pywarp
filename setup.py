@@ -37,7 +37,7 @@ with open(Path('./', "requirements.txt"), "r",encoding='utf-8') as file:
 # calling the setup function
 setuptools.setup(
     name="pywarp",
-    version="0.5.0",
+    version="0.6.0",
     description="A set of functions to ease working with Warp 10",
     long_description=long_description,
     long_description_content_type="text/markdown",
