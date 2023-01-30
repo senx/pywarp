@@ -195,7 +195,7 @@ The end and start parameters are specified in the configured time unit.
       DROP
     %> IFTE
     'raw' FORGET
-    // Emiit a dummy record fast so Spark can determine the schema fast
+    // Emit a dummy record fast so Spark can determine the schema fast
     DEPTH 0 != <% '' SWAP 2 ->LIST %> <% $first <% [ 'x' NEWENCODER WRAPRAW ] %> IFT %> IFTE
     F 'first' STORE
   %>
@@ -240,7 +240,7 @@ The end and start parameters are specified in the configured time unit.
     if None == count:
       count = 'MAXLONG'
 
-  if count < 0:
+  if type(count) == 'int' and count < 0:
     mc2 = mc2.replace("@@SKIP@@", "DUP SIZE " + str(skip - count) + " -")
     mc2 = mc2.replace("@@COUNT@@", str(-count))
   else:
@@ -262,6 +262,7 @@ The end and start parameters are specified in the configured time unit.
     rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
     df = rdd.toDF()
 
+  # Remove dummy records
   df = df.filter("_1 != 'x'").select(col('_2').alias('wrapper'))
 
   return df
