@@ -25,6 +25,8 @@ import pyspark
 from collections import OrderedDict
 from urllib.parse import unquote
 from urllib.parse import urlparse
+
+from pyspark.sql import SparkSession
 from pyspark.sql import SQLContext
 from pyspark.sql.types import *
 from pyspark.sql.functions import explode
@@ -94,12 +96,14 @@ The time units used in end and timespan are those of the accessed platform.
   ##
 
   rdd = sc.newAPIHadoopRDD('io.warp10.hadoop.Warp10InputFormat', 'org.apache.hadoop.io.Text', 'org.apache.hadoop.io.BytesWritable', conf=conf)
+  #rdd = SparkSession.getActiveSession()._jvm.io.warp10.spark.common.SparkUtils.newAPIHadoopRDD(sc._jsc, 'io.warp10.spark.Warp10InputFormat', 'org.apache.hadoop.io.Text', 'org.apache.hadoop.io.BytesWritable', conf).toJavaRDD()
   df = rdd.toDF()
   df = df.select(col('_2').alias('wrapper'))
 
   return df
 
 def hfileread(sc, files, conf=None, selector=None, start=None, end=None, skip=None, count=None, keepEmpty=False, keys=None):
+  SparkSession.getActiveSession()._jvm.io.warp10.spark.Warp10Spark.init()
   """
 Reads data from HFiles and put the read wrappers inside of a data frame.
 
@@ -255,15 +259,27 @@ The end and start parameters are specified in the configured time unit.
     conf['warpscript.inputformat.class'] = 'io.senx.hadoop.HFileInputFormat'
     conf['warpscript.inputformat.script'] = mc2
 
-    rdd = sc.newAPIHadoopRDD(inputFormatClass='io.warp10.spark.SparkWarpScriptInputFormat',
-            keyClass='org.apache.hadoop.io.Text',
-            valueClass='org.apache.hadoop.io.BytesWritable',
-            conf=conf)
-
+    rdd = sc.newAPIHadoopRDD(inputFormatClass='io.warp10.spark.SparkWarpScriptInputFormat', keyClass='org.apache.hadoop.io.Text',valueClass='org.apache.hadoop.io.BytesWritable', conf=conf)
     df = rdd.toDF()
+    #rdd = SparkSession.getActiveSession()._jvm.io.warp10.spark.common.SparkUtils.newAPIHadoopRDD(sc._jsc, 'io.warp10.spark.SparkWarpScriptInputFormat', 'org.apache.hadoop.io.Text', 'org.apache.hadoop.io.BytesWritable', conf).toJavaRDD()
+    #schema = StructType([
+    #  StructField('_1',StringType(),True),
+    #  StructField('_2',BinaryType(),True)
+    #])
+    #schema = SparkSession.getActiveSession()._jvm.org.apache.spark.sql.types.DataType.fromJson(schema.json())
+    #ds = SparkSession.getActiveSession()._jsparkSession.createDataFrame(rdd, schema)
+    #df = ds.toDF()
   else:
     rdd = sc.newAPIHadoopRDD('io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf=conf)
     df = rdd.toDF()
+    #rdd = SparkSession.getActiveSession()._jvm.io.warp10.spark.common.SparkUtils.newAPIHadoopRDD(sc._jsc, 'io.senx.hadoop.HFileInputFormat', 'org.apache.hadoop.io.BytesWritable', 'org.apache.hadoop.io.BytesWritable', conf).toJavaRDD()
+    #schema = StructType([
+    #  StructField('_1',StringType(),True),
+    #  StructField('_2',BinaryType(),True)
+    #])
+    #schema = SparkSession.getActiveSession()._jvm.org.apache.spark.sql.types.DataType.fromJson(schema.json())
+    #ds = SparkSession.getActiveSession()._jsparkSession.createDataFrame(rdd, schema)
+    #df = ds.toDF()
 
   # Remove dummy records
   df = df.filter("_1 != 'x'").select(col('_2').alias('wrapper'))
