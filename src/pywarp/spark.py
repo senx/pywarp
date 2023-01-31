@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#   Copyright 2022  SenX S.A.S.
+#   Copyright 2022-2023  SenX S.A.S.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -108,14 +108,17 @@ The end and start parameters are specified in the configured time unit.
 
   if not conf:
     conf = {}
-    if isinstance(files, list):
-      conf['mapreduce.input.fileinputformat.inputdir'] = ','.join(files)
-    else:
-      conf['mapreduce.input.fileinputformat.inputdir'] = str(files)
-    conf['hfileinputformat.cells'] = 'false'
-    conf['hfileinputformat.infos'] = 'false'
-    if str == type(keys):
-      conf['hfileinputformat.keys'] = keys
+
+  if isinstance(files, list):
+    conf['mapreduce.input.fileinputformat.inputdir'] = ','.join(files)
+  else:
+    conf['mapreduce.input.fileinputformat.inputdir'] = str(files)
+
+  conf['hfileinputformat.cells'] = 'false'
+  conf['hfileinputformat.infos'] = 'false'
+
+  if str == type(keys):
+    conf['hfileinputformat.keys'] = keys
 
   if SQLContext == type(sc):
     # Register a dummy function so Warp 10 config gets initialized
