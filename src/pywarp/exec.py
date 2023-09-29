@@ -20,17 +20,27 @@ import base64
 import json
 import pickle
 
+class WarpscriptException(Exception):
+
+  def __init__(self, resp):
+    self.resp = resp
+    super().__init__(self.resp.headers['X-Warp10-Error-Message'])
+
 def exec(endpoint, mc2, unpickle=False):
   """
 Executes WarpScript on a Warp 10 instance and return the result.
   """
 
   resp = requests.post(endpoint, data=mc2)
-  obj = json.loads(resp.text)
+  try:
+    obj = json.loads(resp.text)
 
-  if unpickle:
-    pickled = base64.b64decode(obj[0])
-    obj = pickle.loads(pickled)
+    if unpickle:
+      pickled = base64.b64decode(obj[0])
+      obj = pickle.loads(pickled)
+  
+  except:
+    raise WarpscriptException(resp)
 
   return obj
 
