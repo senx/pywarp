@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#   Copyright 2022  SenX S.A.S.
+#   Copyright 2022 - 2023  SenX S.A.S.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -15,18 +15,22 @@
 #   limitations under the License.
 #
 
-from fetch import fetch
-from exec import exec
+import requests
+import base64
+import json
+import pickle
 
+def exec(endpoint, mc2, unpickle=False):
+  """
+Executes WarpScript on a Warp 10 instance and return the result.
+  """
 
-if __name__ == "__main__":
-  # https://manytools.org/hacker-tools/ascii-banner/ - speed
-  banner = """
-________        ___       __                      
-___  __ \____  ___ |     / /_____ _______________ 
-__  /_/ /_  / / /_ | /| / /_  __ `/_  ___/__  __ \
-_  ____/_  /_/ /__ |/ |/ / / /_/ /_  /   __  /_/ /
-/_/     _\__, / ____/|__/  \__,_/ /_/    _  .___/ 
-        /____/                           /_/      
-"""
-  print(banner)
+  resp = requests.post(endpoint, data=mc2)
+  obj = json.loads(resp.text)
+
+  if unpickle:
+    pickled = base64.b64decode(obj[0])
+    obj = pickle.loads(pickled)
+
+  return obj
+
