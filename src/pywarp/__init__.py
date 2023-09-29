@@ -15,8 +15,8 @@
 #   limitations under the License.
 #
 
-from fetch import fetch
-from exec import exec
+from .fetch import fetch
+from .exec import exec
 
 
 if __name__ == "__main__":
