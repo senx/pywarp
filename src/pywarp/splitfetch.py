@@ -27,6 +27,8 @@ VALUE = 'value'
 CLASSNAME = 'warp10classname'
 LABELS = 'warp10labels'
 ATTRIBUTES = 'warp10attributes'
+HASLATLON = 'haslatlon'
+HASELEV = 'haselev'
 
 def splitfetch(endpoint, token, selector, end, timespan):
   """
@@ -66,35 +68,39 @@ Outputs a list of pandas dataframe.
         VALUE: [],
         CLASSNAME: cls,
         LABELS: lbls,
-        ATTRIBUTES: attributes
+        ATTRIBUTES: attributes,
+        HASLATLON: False,
+        HASELEV: False
       }
     
     res[sel][TIMESTAMP].append(ts)
+    res[sel][VALUE].append(value)
+    if lat is not None:
+      res[sel][HASLATLON] = True
     res[sel][LATITUDE].append(lat)
     res[sel][LONGITUDE].append(lon)
+    if elev is not None:
+      res[sel][HASELEV] = True
     res[sel][ELEVATION].append(elev)
-    res[sel][VALUE].append(value)
 
   dfs = []
   for sel in res:
     gtsDict = res[sel]
-    cols = [
-        TIMESTAMP + ':' + gtsDict[CLASSNAME],
-        LATITUDE + ':' + gtsDict[CLASSNAME],
-        LONGITUDE + ':' + gtsDict[CLASSNAME],
-        ELEVATION + ':' + gtsDict[CLASSNAME],
-        VALUE + ':' + gtsDict[CLASSNAME]]
     
-    df = pandas.DataFrame(data = {
-        cols[0] : gtsDict[TIMESTAMP],
-        cols[1] : gtsDict[LATITUDE],
-        cols[2] : gtsDict[LONGITUDE],
-        cols[3] : gtsDict[ELEVATION],
-        cols[4] : gtsDict[VALUE],
-      }
-      , columns= cols
-      , copy = False)
+    cols = [TIMESTAMP + ':' + gtsDict[CLASSNAME]]
+    data = {cols[0] : gtsDict[TIMESTAMP]}
+    if gtsDict[HASLATLON]:
+      cols.append(LATITUDE + ':' + gtsDict[CLASSNAME])
+      cols.append(LONGITUDE + ':' + gtsDict[CLASSNAME])
+      data[cols[1]] = gtsDict[LATITUDE]
+      data[cols[2]] = gtsDict[LONGITUDE]
+    if gtsDict[HASELEV]:
+      cols.append(ELEVATION + ':' + gtsDict[CLASSNAME])
+      data[cols[-1]] = gtsDict[ELEVATION]
+    cols.append(VALUE + ':' + gtsDict[CLASSNAME])
+    data[cols[-1]] = gtsDict[VALUE]
     
+    df = pandas.DataFrame(data = data, columns= cols, copy = False)
     df.attrs[CLASSNAME] = gtsDict[CLASSNAME]
     df.attrs[LABELS] = gtsDict[LABELS]
     df.attrs[ATTRIBUTES] = gtsDict[ATTRIBUTES]
