@@ -30,7 +30,7 @@ ATTRIBUTES = 'warp10attributes'
 HASLATLON = 'haslatlon'
 HASELEV = 'haselev'
 
-def splitfetch(endpoint, token, selector, end, timespan):
+def splitfetch(endpoint, token, selector, end, timespan, indexedByTimestamp=False):
   """
 Read data from a Warp 10 instance using the specified /api/v0/fetch endpoint.
 Outputs a list of pandas dataframe.
@@ -86,21 +86,23 @@ Outputs a list of pandas dataframe.
   dfs = []
   for sel in res:
     gtsDict = res[sel]
-    
-    cols = [TIMESTAMP + ':' + gtsDict[CLASSNAME]]
-    data = {cols[0] : gtsDict[TIMESTAMP]}
+    cols = []
+    data = {}
+    if not indexedByTimestamp:
+      cols.append(TIMESTAMP + ':' + gtsDict[CLASSNAME])
+      data[cols[0]] = gtsDict[TIMESTAMP]
     if gtsDict[HASLATLON]:
       cols.append(LATITUDE + ':' + gtsDict[CLASSNAME])
+      data[cols[-1]] = gtsDict[LATITUDE]
       cols.append(LONGITUDE + ':' + gtsDict[CLASSNAME])
-      data[cols[1]] = gtsDict[LATITUDE]
-      data[cols[2]] = gtsDict[LONGITUDE]
+      data[cols[-1]] = gtsDict[LONGITUDE]
     if gtsDict[HASELEV]:
       cols.append(ELEVATION + ':' + gtsDict[CLASSNAME])
       data[cols[-1]] = gtsDict[ELEVATION]
     cols.append(VALUE + ':' + gtsDict[CLASSNAME])
     data[cols[-1]] = gtsDict[VALUE]
     
-    df = pandas.DataFrame(data = data, columns= cols, copy = False)
+    df = pandas.DataFrame(data = data, index = gtsDict[TIMESTAMP] if indexedByTimestamp else None, columns = cols, copy = False)
     df.attrs[CLASSNAME] = gtsDict[CLASSNAME]
     df.attrs[LABELS] = gtsDict[LABELS]
     df.attrs[ATTRIBUTES] = gtsDict[ATTRIBUTES]
