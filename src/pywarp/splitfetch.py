@@ -24,9 +24,9 @@ LATITUDE = 'lat'
 LONGITUDE = 'lon'
 ELEVATION = 'elev'
 VALUE = 'value'
-CLASSNAME = 'warp10classname'
-LABELS = 'warp10labels'
-ATTRIBUTES = 'warp10attributes'
+CLASSNAME = 'warp10.classname'
+LABELS = 'warp10.labels'
+ATTRIBUTES = 'warp10.attributes'
 HASLATLON = 'haslatlon'
 HASELEV = 'haselev'
 
@@ -89,15 +89,15 @@ Outputs a list of pandas dataframe.
     cols = []
     data = {}
     if not indexedByTimestamp:
-      cols.append(TIMESTAMP + ':' + gtsDict[CLASSNAME])
+      cols.append(TIMESTAMP)
       data[cols[0]] = gtsDict[TIMESTAMP]
     if gtsDict[HASLATLON]:
-      cols.append(LATITUDE + ':' + gtsDict[CLASSNAME])
+      cols.append(LATITUDE)
       data[cols[-1]] = gtsDict[LATITUDE]
-      cols.append(LONGITUDE + ':' + gtsDict[CLASSNAME])
+      cols.append(LONGITUDE)
       data[cols[-1]] = gtsDict[LONGITUDE]
     if gtsDict[HASELEV]:
-      cols.append(ELEVATION + ':' + gtsDict[CLASSNAME])
+      cols.append(ELEVATION)
       data[cols[-1]] = gtsDict[ELEVATION]
     cols.append(VALUE + ':' + gtsDict[CLASSNAME])
     data[cols[-1]] = gtsDict[VALUE]

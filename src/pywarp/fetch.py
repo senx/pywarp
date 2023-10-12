@@ -100,6 +100,8 @@ def _parseLine(line):
 
   if '' == elev:
     elev = None
+  else:
+    elev = int(elev)
 
   if '' == latlon:
     lat = None
