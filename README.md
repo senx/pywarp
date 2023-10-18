@@ -36,7 +36,7 @@ Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams d
 | classname  | str       | Classname of the series the data point belongs to | No       |
 | labels     | dict      | Labels of the series the data point belongs to | No       |
 | attributes | dict      | Attributes of the series the data point belongs to | No       |
-| ts         | int       | Timestamp in time units since Epoch of the data point | No       |
+| ts         | int       | Timestamp of the data point in time units since Epoch | No       |
 | lat        | float     | Latitude of the data point | No       |
 | lon        | float     | Longitude of the data point | No       |
 | elev       | int       | Elevation of the data point | No       |
@@ -48,7 +48,7 @@ Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams d
 
 ### 2. GTS Data Frame List
 
-The result of `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique geo time series.
+Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique geo time series.
 
 | Column Name | Data Type | Description | Optional |
 |------------|-----------|-------------|----------|
@@ -56,28 +56,26 @@ The result of `pywarp.sfetch`, this format gives a list of individual Pandas dat
 | lat        | float     | Latitude    | Yes      |
 | lon        | float     | Longitude   | Yes      |
 | elev       | int       | Elevation   | Yes      |
-| classname  | various   | Value       | No       |
+| `<classname>` | various   | Value       | No       |
 
-Each DataFrame's `attrs` dict contains:
+Each DataFrame's `.attrs` dict contains:
   - **warp10classname**: Classname of the geo time series (str).
   - **warp10labels**: Labels associated with the time series (dict).
   - **warp10attributes**: Attributes of the time series (dict).
 
 ### 3. Fused GTS Data Frames
 
-The result of `pywarp.ffetch`, this format amalgamates data from all fetched geo time series into columns of a single Pandas dataframe.
+Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo time series into columns of a single Pandas dataframe.
 
 | Column Name/Prefix      | Data Type | Description                             | Optional |
 |-------------------------|-----------|-----------------------------------------|----------|
-| `<label key>`           | str       | One for each unique label key           | Yes      |
-| `<attribute key>`       | str       | One for each unique attribute key       | Yes      |
-| ts                      | int       | Timestamp in time units since Epoch     | No       |
-| lat:`<classname>`       | float     | Latitude for each unique classname      | Yes      |
-| lon:`<classname>`       | float     | Longitude for each unique classname     | Yes      |
-| elev:`<classname>`      | int       | Elevation for each unique classname     | Yes      |
-| val:`<classname>`       | various   | Data point values for each unique classname | No |
-
-*Note*: `<classname>` is a placeholder indicating that there will be a unique column for each classname in the fetched data.
+| `<label key>`           | str       | One column for each unique label key     | Yes      |
+| `<attribute key>`       | str       | One column for each unique attribute key | Yes      |
+| ts                      | int       | Timestamp in time units since Epoch      | No       |
+| lat:`<classname>`       | float     | Latitude, one column for each unique classname  | Yes      |
+| lon:`<classname>`       | float     | Longitude, one column for each unique classname | Yes      |
+| elev:`<classname>`      | int       | Elevation, one column for each unique classname | Yes      |
+| val:`<classname>`       | various   | Value, one column for each unique classname     | No        |
 
 ### 4. WarpScript JSON Output
 
