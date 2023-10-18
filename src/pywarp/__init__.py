@@ -17,6 +17,7 @@
 
 from .fetch import fetch
 from .splitfetch import sfetch
+from .fusefetch import ffetch
 from .exec import exec
 
 
