@@ -27,7 +27,7 @@ The Pywarp library provides various functions to fetch and represent these data 
 
 # Data Frame Schemas
 
-### 1. Data Point Stream DataFrame (DPS)
+### 1. Data Point Stream Data Frame
 
 Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams data points within a single Pandas dataframe, where each row represents a distinct data point.
 
@@ -46,7 +46,7 @@ Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams d
 | s_value    | str       | `STRING` value of data point | No       |
 | bin_value  | binary    | `BYTES` value of data point | No       |
 
-### 2. Geo Time Series Data Frame (GTS)
+### 2. GTS Data Frame List
 
 The result of `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique geo time series.
 
@@ -63,7 +63,7 @@ Each DataFrame's `attrs` dict contains:
   - **warp10labels**: Labels associated with the time series (dict).
   - **warp10attributes**: Attributes of the time series (dict).
 
-### 3. Fused GTS Data Frames (FGTS)
+### 3. Fused GTS Data Frames
 
 The result of `pywarp.ffetch`, this format amalgamates data from all fetched geo time series into columns of a single Pandas dataframe.
 
@@ -82,7 +82,8 @@ The result of `pywarp.ffetch`, this format amalgamates data from all fetched geo
 ### 4. Warpscript JSON Output
 
 `pywarp.exec` returns the JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
-This is the most flexible one to retrieve data in a user defined format.
+
+This is the most flexible way to retrieve data in a customizable format.
 
 # Examples
 
