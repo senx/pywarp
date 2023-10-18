@@ -30,7 +30,7 @@ ATTRIBUTES = 'warp10.attributes'
 HASLATLON = 'haslatlon'
 HASELEV = 'haselev'
 
-def splitfetch(endpoint, token, selector, end, timespan, indexedByTimestamp=False):
+def sfetch(endpoint, token, selector, end, timespan, indexedByTimestamp=False):
   """
 Read data from a Warp 10 instance using the specified /api/v0/fetch endpoint.
 Outputs a list of pandas dataframe.
