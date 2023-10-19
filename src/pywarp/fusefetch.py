@@ -30,10 +30,10 @@ ATTRIBUTES = 'warp10.attributes'
 
 def _expandMetadata(df):
   for key in df.attrs[LABELS]:
-    df[key] = [df.attrs[LABELS][key]] * len(df)
+    df['l:' + key] = [df.attrs[LABELS][key]] * len(df)
   
   for key in df.attrs[ATTRIBUTES]:
-    df[key] = [df.attrs[ATTRIBUTES][key]] * len(df)
+    df['a:' + key] = [df.attrs[ATTRIBUTES][key]] * len(df)
 
   df.rename(columns={LATITUDE: LATITUDE + ':' + df.attrs[CLASSNAME],
                      LONGITUDE: LONGITUDE + ':' + df.attrs[CLASSNAME],

@@ -52,7 +52,7 @@ Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataf
 
 | Column Name | Data Type | Description | Optional |
 |------------|-----------|-------------|----------|
-| ts         | int       | Timestamp in time units since Epoch | No       |
+| ts or *index* | int       | Timestamp in time units since Epoch | No       |
 | lat        | float     | Latitude    | Yes      |
 | lon        | float     | Longitude   | Yes      |
 | elev       | int       | Elevation   | Yes      |
@@ -69,9 +69,9 @@ Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo t
 
 | Column Name/Prefix      | Data Type | Description                             | Optional |
 |-------------------------|-----------|-----------------------------------------|----------|
-| `<label key>`           | str       | One column for each unique label key     | Yes      |
-| `<attribute key>`       | str       | One column for each unique attribute key | Yes      |
-| ts                      | int       | Timestamp in time units since Epoch      | No       |
+| *index*                 | int       | Timestamp in time units since Epoch      | No       |
+| l:`<label key>`         | str       | One column for each unique label key     | Yes      |
+| a:`<attribute key>`     | str       | One column for each unique attribute key | Yes      |
 | lat:`<classname>`       | float     | Latitude, one column for each unique classname  | Yes      |
 | lon:`<classname>`       | float     | Longitude, one column for each unique classname | Yes      |
 | elev:`<classname>`      | int       | Elevation, one column for each unique classname | Yes      |
