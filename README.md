@@ -81,7 +81,7 @@ Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo t
 
 ### 4. WarpScript JSON Output
 
-`pywarp.exec` returns the JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
+`pywarp.exec` returns the parsed JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
 
 This is the most flexible way to retrieve data in a customizable format.
 
