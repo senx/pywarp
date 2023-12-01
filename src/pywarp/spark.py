@@ -410,7 +410,7 @@ Returns a schema to which obj will conform, using primitive types supported by W
   elif int == type(obj):
     objschema = LongType()
   elif str == type(obj):
-    if '' == obj
+    if '' == obj:
       objschema = StringType()
     else:
       objschema = pyspark.sql.types._parse_datatype_string(obj)
