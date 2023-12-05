@@ -18,14 +18,23 @@ pip3 install -e .
 # Fetching data options
 
 Data points in the Warp 10 platform follow a Geo Time Series data model (geo location information is optional).
-The PyWarp library provides various functions to fetch and represent these data points using dataframes:
 
+The PyWarp library provides various functions to fetch and represent these data points using [Pandas](https://pandas.pydata.org) [dataframes](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html), or [Spark](https://spark.apache.org) [dataframes](https://spark.apache.org/docs/latest/sql-programming-guide.html#datasets-and-dataframes):
+
+[Pandas](https://pandas.pydata.org) integration:
 - **`pywarp.fetch`**: returns a single dataframe where each row represents a single data point.
 - **`pywarp.sfetch`**: returns a list of dataframes, with each dataframe representing a distinct (geo) time series.
 - **`pywarp.ffetch`**: returns a single dataframe, resulting from the fusion of multiple (geo) time series dataframes.
+
+[Spark](https://spark.apache.org) integration:
+- **`pywarp.spark.fetch`**: reads wrappers directly from a Warp 10 instance and loads them into a Spark dataframe.
+- **`pywarp.spark.hfileread`**: reads data from HFiles and loads the extracted wrappers into a Spark dataframe.
+- **`pywarp.spark.wrappers2df`**: converts a dataframe containing wrappers into a dataframe of data points.
+
+WarpScript integration:
 - **`pywarp.exec`**: outputs the parsed JSON result of a WarpScript query.
 
-A notebook example for each function is provided in `test/`.
+A notebook example for each dataframe schema option is provided in `test/`.
 
 # Data Frame Schemas
 
