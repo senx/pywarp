@@ -21,7 +21,7 @@ import json
 import pickle
 import warnings
 
-class WarpscriptException(Exception):
+class WarpScriptException(Exception):
 
   def __init__(self, resp):
     self.resp = resp
@@ -45,7 +45,7 @@ Executes WarpScript on a Warp 10 instance and return the result.
       obj = pickle.loads(pickled)
   
   except:
-    raise WarpscriptException(resp)
+    raise WarpScriptException(resp)
 
   return obj
 
