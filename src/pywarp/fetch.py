@@ -19,11 +19,15 @@ import requests
 import base64
 import math
 import pandas
+import warnings
 
 from urllib.parse import unquote
 from urllib.parse import urlparse
 
 def _streamFetchResponse(url, headers, params):
+  target = url.split('/')[-1]
+  if target != 'fetch':
+    warnings.warn('Provided URL endpoint for fetching data ends with /' + target + ' rather than /fetch. This is not standard for a fetch endpoint.')
   req = requests.Request("GET",url, headers=headers, params=params).prepare()
 
   s = requests.Session()

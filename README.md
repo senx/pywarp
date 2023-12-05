@@ -20,10 +20,12 @@ pip3 install -e .
 Data points in the Warp10 platform follow a geo time series data model (geo location information is optional).
 The Pywarp library provides various functions to fetch and represent these data points using dataframes:
 
-- **`pywarp.fetch`**: returns a dataframe where each row represents a single data point.
+- **`pywarp.fetch`**: returns a single dataframe where each row represents a single data point.
 - **`pywarp.sfetch`**: returns a list of dataframes, with each dataframe representing a distinct (geo) time series.
 - **`pywarp.ffetch`**: returns a single dataframe, resulting from the fusion of multiple (geo) time series dataframes.
-- **`pywarp.exec`**: outputs the JSON result of a WarpScript query.
+- **`pywarp.exec`**: outputs the parsed JSON result of a WarpScript query.
+
+A notebook example for each function is provided in `test/`.
 
 # Data Frame Schemas
 
@@ -79,7 +81,7 @@ Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo t
 
 ### 4. WarpScript JSON Output
 
-`pywarp.exec` returns the JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
+`pywarp.exec` returns the parsed JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
 
 This is the most flexible way to retrieve data in a customizable format.
 

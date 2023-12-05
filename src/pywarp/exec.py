@@ -19,6 +19,7 @@ import requests
 import base64
 import json
 import pickle
+import warnings
 
 class WarpscriptException(Exception):
 
@@ -30,6 +31,10 @@ def exec(endpoint, mc2, unpickle=False):
   """
 Executes WarpScript on a Warp 10 instance and return the result.
   """
+  target = endpoint.split('/')[-1]
+  if target != 'exec':
+    warnings.warn('Provided URL endpoint for sending warpscript ends with /' + target + ' rather than /exec. This is not standard for an exec endpoint.')
+  
 
   resp = requests.post(endpoint, data=mc2)
   try:
