@@ -29,7 +29,7 @@ class WarpScriptException(Exception):
 
 def exec(endpoint, mc2, unpickle=False):
   """
-Executes WarpScript on a Warp 10 instance and return the result.
+Execute WarpScript on a Warp 10 instance and return the result.
   """
   target = endpoint.split('/')[-1]
   if target != 'exec':

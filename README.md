@@ -17,8 +17,8 @@ pip3 install -e .
 
 # Fetching data options
 
-Data points in the Warp10 platform follow a geo time series data model (geo location information is optional).
-The Pywarp library provides various functions to fetch and represent these data points using dataframes:
+Data points in the Warp 10 platform follow a Geo Time Series data model (geo location information is optional).
+The PyWarp library provides various functions to fetch and represent these data points using dataframes:
 
 - **`pywarp.fetch`**: returns a single dataframe where each row represents a single data point.
 - **`pywarp.sfetch`**: returns a list of dataframes, with each dataframe representing a distinct (geo) time series.
@@ -50,7 +50,7 @@ Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams d
 
 ### 2. GTS Data Frame List
 
-Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique geo time series.
+Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique Geo Time Series.
 
 | Column Name | Data Type | Description | Optional |
 |------------|-----------|-------------|----------|
@@ -61,13 +61,13 @@ Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataf
 | `<classname>` | various   | Value       | No       |
 
 Each DataFrame's `.attrs` dict contains:
-  - **warp10classname**: Classname of the geo time series (str).
+  - **warp10classname**: Classname of the Geo Time Series (str).
   - **warp10labels**: Labels associated with the time series (dict).
   - **warp10attributes**: Attributes of the time series (dict).
 
 ### 3. Fused GTS Data Frames
 
-Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo time series into columns of a single Pandas dataframe.
+Returned by `pywarp.ffetch`, this format amalgamates data from all fetched Geo Time Series into columns of a single Pandas dataframe.
 
 | Column Name/Prefix      | Data Type | Description                             | Optional |
 |-------------------------|-----------|-----------------------------------------|----------|
@@ -81,7 +81,7 @@ Returned by `pywarp.ffetch`, this format amalgamates data from all fetched geo t
 
 ### 4. WarpScript JSON Output
 
-`pywarp.exec` returns the parsed JSON output of a warpscript query obtained against the Warp 10 `/exec` endpoint.
+`pywarp.exec` returns the parsed JSON output of a WarpScript query obtained against the Warp 10 `/exec` endpoint.
 
 This is the most flexible way to retrieve data in a customizable format.
 
