@@ -31,7 +31,7 @@ The PyWarp library provides various functions to fetch and represent these data 
 - **`pywarp.spark.hfileread`**: reads data from HFiles and loads the extracted wrappers into a Spark dataframe.
 - **`pywarp.spark.wrappers2df`**: converts a dataframe containing wrappers into a dataframe of data points.
 
-WarpScript integration:
+[WarpScript](https://warp10.io/content/03_Documentation/04_WarpScript) integration:
 - **`pywarp.exec`**: outputs the parsed JSON result of a WarpScript query.
 
 A notebook example for each dataframe schema option is provided in `test/`.
@@ -98,10 +98,17 @@ This is the most flexible way to retrieve data in a customizable format.
 
 ## Reading data from a Warp 10 instance
 
+Notebook with examples are provided in `test`.
+
 ```
 import pywarp
 
 df = pywarp.fetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100)
+
+# Or using another dataframe schema:
+# df = pywarp.sfetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100, indexedByTimestamp=True)
+# df = pywarp.ffetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100, indexedByTimestamp=True)
+
 print(df)
 ```
 
