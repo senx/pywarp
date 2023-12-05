@@ -98,7 +98,7 @@ This is the most flexible way to retrieve data in a customizable format.
 
 ## Reading data from a Warp 10 instance
 
-Notebook with examples are provided in `test`.
+See also: [notebook examples](https://github.com/senx/pywarp/blob/master/test/).
 
 ```
 import pywarp
