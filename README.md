@@ -10,39 +10,105 @@ An `exec` function allows the execution of WarpScript on a Warp 10 instance and 
 
 # Installation
 
-Ensure Spark and/or pyspark is installed (`pip3 install pyspark`) then simply run the following command:
-
+In this folder run the command:
 ```
-python3 setup.py install
+pip3 install -e .
 ```
 
-# Data Frame schema
+# Fetching data options
 
-The data frames returned by `pywarp.fetch` and `pywarp.spark.wrappers2df` have the following schema:
+Data points in the Warp 10 platform follow a Geo Time Series data model (geo location information is optional).
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `class` | `STRING` | Class name of Geo Time Series (*GTS*) |
-| `labels` | `MAP` | Map of labels of the GTS |
-| `attribtues` | `MAP` | Map of attributes of the GTS |
-| `ts` | `DOUBLE` | Timestamp of the data point, in time units since the Epoch |
-| `lat` | `DOUBLE` | Latitude of the data point |
-| `lon` | `DOUBLE` | Longitude of the data point |
-| `elev` | `LONG` | Elevation of the data point, in mm |
-| `l_value` | `LONG` | `LONG` value of the data point |
-| `d_value` | `DOUBLE` | `DOUBLE` value of the data point |
-| `b_value` | `BOOLEAN` | `BOOLEAN` value of the data point |
-| `s_value` | `STRING` | `STRING` value of the data point |
-| `bin_value` | `BINARY` | `BINARY` value of the data point |
+The PyWarp library provides various functions to fetch and represent these data points using [Pandas](https://pandas.pydata.org) [dataframes](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html), or [Spark](https://spark.apache.org) [dataframes](https://spark.apache.org/docs/latest/sql-programming-guide.html#datasets-and-dataframes):
+
+[Pandas](https://pandas.pydata.org) integration:
+- **`pywarp.fetch`**: returns a single dataframe where each row represents a single data point.
+- **`pywarp.sfetch`**: returns a list of dataframes, with each dataframe representing a distinct (geo) time series.
+- **`pywarp.ffetch`**: returns a single dataframe, resulting from the fusion of multiple (geo) time series dataframes.
+
+[Spark](https://spark.apache.org) integration:
+- **`pywarp.spark.fetch`**: reads wrappers directly from a Warp 10 instance and loads them into a Spark dataframe.
+- **`pywarp.spark.hfileread`**: reads data from HFiles and loads the extracted wrappers into a Spark dataframe.
+- **`pywarp.spark.wrappers2df`**: converts a dataframe containing wrappers into a dataframe of data points.
+
+[WarpScript](https://warp10.io/content/03_Documentation/04_WarpScript) integration:
+- **`pywarp.exec`**: outputs the parsed JSON result of a WarpScript query.
+
+A notebook example for each dataframe schema option is provided in `test/`.
+
+# Data Frame Schemas
+
+### 1. Data Point Stream Data Frame
+
+Returned by `pywarp.fetch` and `pywarp.spark.wrappers2df`, this format streams data points within a single Pandas dataframe, where each row represents a distinct data point.
+
+| Column Name | Data Type | Description | Optional |
+|------------|-----------|-------------|----------|
+| classname  | str       | Classname of the series the data point belongs to | No       |
+| labels     | dict      | Labels of the series the data point belongs to | No       |
+| attributes | dict      | Attributes of the series the data point belongs to | No       |
+| ts         | int       | Timestamp of the data point in time units since Epoch | No       |
+| lat        | float     | Latitude of the data point | No       |
+| lon        | float     | Longitude of the data point | No       |
+| elev       | int       | Elevation of the data point | No       |
+| l_value    | int       | `LONG` value of the data point |No       |
+| d_value    | float     | `DOUBLE` value of the data point | No       |
+| b_value    | bool      | `BOOLEAN` value of data point | No       |
+| s_value    | str       | `STRING` value of data point | No       |
+| bin_value  | binary    | `BYTES` value of data point | No       |
+
+### 2. GTS Data Frame List
+
+Returned by `pywarp.sfetch`, this format gives a list of individual Pandas dataframes, each representing a unique Geo Time Series.
+
+| Column Name | Data Type | Description | Optional |
+|------------|-----------|-------------|----------|
+| ts or *index* | int       | Timestamp in time units since Epoch | No       |
+| lat        | float     | Latitude    | Yes      |
+| lon        | float     | Longitude   | Yes      |
+| elev       | int       | Elevation   | Yes      |
+| `<classname>` | various   | Value       | No       |
+
+Each DataFrame's `.attrs` dict contains:
+  - **warp10classname**: Classname of the Geo Time Series (str).
+  - **warp10labels**: Labels associated with the time series (dict).
+  - **warp10attributes**: Attributes of the time series (dict).
+
+### 3. Fused GTS Data Frames
+
+Returned by `pywarp.ffetch`, this format amalgamates data from all fetched Geo Time Series into columns of a single Pandas dataframe.
+
+| Column Name/Prefix      | Data Type | Description                             | Optional |
+|-------------------------|-----------|-----------------------------------------|----------|
+| *index*                 | int       | Timestamp in time units since Epoch      | No       |
+| l:`<label key>`         | str       | One column for each unique label key     | Yes      |
+| a:`<attribute key>`     | str       | One column for each unique attribute key | Yes      |
+| lat:`<classname>`       | float     | Latitude, one column for each unique classname  | Yes      |
+| lon:`<classname>`       | float     | Longitude, one column for each unique classname | Yes      |
+| elev:`<classname>`      | int       | Elevation, one column for each unique classname | Yes      |
+| val:`<classname>`       | various   | Value, one column for each unique classname     | No        |
+
+### 4. WarpScript JSON Output
+
+`pywarp.exec` returns the parsed JSON output of a WarpScript query obtained against the Warp 10 `/exec` endpoint.
+
+This is the most flexible way to retrieve data in a customizable format.
 
 # Examples
 
 ## Reading data from a Warp 10 instance
 
+See also: [notebook examples](https://github.com/senx/pywarp/blob/master/test/).
+
 ```
 import pywarp
 
 df = pywarp.fetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100)
+
+# Or using another dataframe schema:
+# df = pywarp.sfetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100, indexedByTimestamp=True)
+# df = pywarp.ffetch('https://HOST:PORT/api/v0/fetch', 'TOKEN', 'SELECTOR{}', 'now', -100, indexedByTimestamp=True)
+
 print(df)
 ```
 

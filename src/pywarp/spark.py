@@ -33,6 +33,7 @@ from pyspark.sql.functions import explode
 from pyspark.sql.functions import col
 
 import time
+import sys
 
 def fetch(sc, endpoint, token, selector, end, timespan, conf = None):
   """
@@ -52,7 +53,7 @@ The time units used in end and timespan are those of the accessed platform.
 
   if not url.port:
     print('Endpoint MUST contain a port')
-    exit(1)
+    sys.exit(1)
 
   if not conf:
     conf = {}
