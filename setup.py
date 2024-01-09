@@ -60,3 +60,7 @@ setuptools.setup(
     keywords="time series Warp 10",
     python_requires=">=3.8",
 )
+
+# To publish:
+# python3 setup.py sdist
+# twine upload dist/* 
