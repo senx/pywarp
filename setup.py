@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#   Copyright 2022-2023  SenX S.A.S.
+#   Copyright 2022-2024  SenX S.A.S.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -36,12 +36,12 @@ with open(Path('./', "requirements.txt"), "r",encoding='utf-8') as file:
 
 # calling the setup function
 setuptools.setup(
-    name="pywarp",
-    version="0.9.0",
+    name="warp10-pywarp",
+    version="1.0.0",
     description="A set of functions to ease working with Warp 10",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    # url='',
+     url='http://github.com/senx/pywarp',
     author="SenX",
     author_email="contact@senx.io",
     license="Apache 2.0",
@@ -50,10 +50,9 @@ setuptools.setup(
         where="src", include=["pywarp"]
     ),
     classifiers=[
-        "Development Status :: 4 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Topic :: Scientific/Engineering :: Time Series ",
-        "License :: Apache 2.0",
+        "Topic :: Scientific/Engineering",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.8",
     ],
