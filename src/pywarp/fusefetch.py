@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#   Copyright 2023  SenX S.A.S.
+#   Copyright 2023-2024  SenX S.A.S.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ CLASSNAME = 'warp10.classname'
 LABELS = 'warp10.labels'
 ATTRIBUTES = 'warp10.attributes'
 
-def ffetch(endpoint, token, selector, end, timespan, indexedByTimestamp=False):
+def ffetch(endpoint, token, selector, end, timespan, indexedByTimestamp=False, params={}):
   """
 Read data from a Warp 10 instance using the specified /api/v0/fetch endpoint.
 Outputs a single amalgamated pandas dataframe.
@@ -38,7 +38,6 @@ Outputs a single amalgamated pandas dataframe.
 
   headers = {}
   headers['X-Warp10-Token'] = token
-  params = {}
   params['selector'] = selector
   params['end'] = str(end)
   params['timespan'] = str(timespan)
