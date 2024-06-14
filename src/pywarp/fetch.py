@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#   Copyright 2022 - 2023  SenX S.A.S.
+#   Copyright 2022-2024  SenX S.A.S.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ def _parseLine(line):
 
   return (ts,lat,lon,elev,cls,lbls,attributes,value)
 
-def fetch(endpoint, token, selector, end, timespan):
+def fetch(endpoint, token, selector, end, timespan, params = {}):
   """
 Read data from a Warp 10 instance using the specified /api/v0/fetch endpoint.
 Outputs a pandas dataframe.
@@ -125,7 +125,6 @@ Outputs a pandas dataframe.
 
   headers = {}
   headers['X-Warp10-Token'] = token
-  params = {}
   params['selector'] = selector
   params['end'] = str(end)
   params['timespan'] = str(timespan)
