@@ -10,6 +10,13 @@ An `exec` function allows the execution of WarpScript on a Warp 10 instance and 
 
 # Installation
 
+```
+pip3 install warp10-pywarp
+```
+
+
+# Installation from source
+
 In this folder run the command:
 ```
 pip3 install -e .
